@@ -10,10 +10,20 @@ class UserService:
     def __init__(self, db: Session):
         self.repository = UserRepository(db)
 
-    def list_users(self):
-        return self.repository.list_users()
+    def list_users(self, page: int, limit: int):
+        return self.repository.list_users(page=page, limit=limit)
 
     def create_user(self, payload: UserCreate):
+        duplicate_field = self.repository.find_duplicate_field(
+            email=payload.email,
+            phone_number=payload.phone_number,
+        )
+
+        if duplicate_field == "email":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email đã tồn tại")
+        if duplicate_field == "phone_number":
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Số điện thoại đã tồn tại")
+
         try:
             return self.repository.create_user(payload)
         except IntegrityError as exc:

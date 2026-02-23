@@ -3,14 +3,44 @@ from sqlalchemy.orm import Session
 
 from app.models import User, UserStatus
 from app.schemas import UserCreate
+from app.schemas.user import normalize_email_value, normalize_phone_number_value
 
 
 class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def list_users(self) -> list[User]:
-        return self.db.query(User).all()
+    def list_users(self, page: int, limit: int) -> tuple[list[User], int]:
+        base_query = self.db.query(User)
+        total_items = base_query.count()
+        offset = (page - 1) * limit
+        users = (
+            base_query
+            .order_by(User.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return users, total_items
+
+    def find_duplicate_field(self, email: str | None, phone_number: str | None) -> str | None:
+        if email is not None:
+            existing_emails = self.db.query(User.email).filter(User.email.isnot(None)).all()
+            for (existing_email,) in existing_emails:
+                if normalize_email_value(existing_email) == email:
+                    return "email"
+
+        if phone_number is not None:
+            existing_phones = self.db.query(User.phone_number).filter(User.phone_number.isnot(None)).all()
+            for (existing_phone,) in existing_phones:
+                try:
+                    normalized_phone = normalize_phone_number_value(existing_phone)
+                except ValueError:
+                    normalized_phone = None
+                if normalized_phone == phone_number:
+                    return "phone_number"
+
+        return None
 
     def create_user(self, payload: UserCreate) -> User:
         user = User(

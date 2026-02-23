@@ -1,8 +1,35 @@
 from datetime import datetime
+import re
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, field_validator, model_validator
+from app.schemas.api import ApiResponse, PaginatedApiResponse
+
+
+def normalize_email_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip().lower()
+    return cleaned or None
+
+
+def normalize_phone_number_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    if not re.fullmatch(r"\+?[0-9\s\-().]+", cleaned):
+        raise ValueError("phone_number chỉ được chứa số và các ký tự định dạng phổ biến")
+
+    digits = "".join(char for char in cleaned if char.isdigit())
+    if len(digits) < 9 or len(digits) > 15:
+        raise ValueError("phone_number phải có từ 9 đến 15 chữ số")
+
+    return digits
 
 
 class UserCreate(BaseModel):
@@ -21,21 +48,15 @@ class UserCreate(BaseModel):
             return cleaned or None
         return value
 
-    @field_validator("phone_number")
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: Optional[str]) -> Optional[str]:
+        return normalize_email_value(value)
+
+    @field_validator("phone_number", mode="before")
     @classmethod
     def validate_phone_number(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return None
-
-        allowed_chars = set("+0123456789")
-        if any(char not in allowed_chars for char in value):
-            raise ValueError("phone_number chỉ được chứa số và ký tự '+'")
-
-        digits_count = sum(char.isdigit() for char in value)
-        if digits_count < 9 or digits_count > 15:
-            raise ValueError("phone_number phải có từ 9 đến 15 chữ số")
-
-        return value
+        return normalize_phone_number_value(value)
 
     @model_validator(mode="after")
     def validate_contact_info(self):
@@ -55,3 +76,11 @@ class UserResponse(BaseModel):
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserSingleApiResponse(ApiResponse[UserResponse]):
+    pass
+
+
+class UserListApiResponse(PaginatedApiResponse[UserResponse]):
+    pass

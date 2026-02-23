@@ -23,11 +23,16 @@ app.add_middleware(
 
 app.include_router(user.router)
 
+
+def _health_payload():
+    db_status = "ok" if migrate.check_db() else "error"
+    return {"status": db_status}
+
 @app.get("/")
 async def read_root():
     return RedirectResponse(url=f"{settings.API_PREFIX}/docs")
 
 @app.get("/health")
+@app.get(f"{settings.API_PREFIX}/health")
 async def health_check():
-    db_status = "ok" if migrate.check_db() else "error"
-    return {"status": db_status}
+    return _health_payload()

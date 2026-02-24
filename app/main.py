@@ -23,7 +23,6 @@ app.add_middleware(
 
 app.include_router(user.router)
 
-
 def _health_payload():
     db_status = "ok" if migrate.check_db() else "error"
     return {"status": db_status}

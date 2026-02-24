@@ -31,7 +31,6 @@ def _health_payload():
 async def read_root():
     return RedirectResponse(url=f"{settings.API_PREFIX}/docs")
 
-@app.get("/health")
 @app.get(f"{settings.API_PREFIX}/health")
 async def health_check():
     return _health_payload()

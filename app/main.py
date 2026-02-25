@@ -11,7 +11,8 @@ app = FastAPI(
     redoc_url=f"{settings.API_PREFIX}/redoc"
 )
 
-migrate.run()
+if settings.ENVIRONMENT != "production":
+    migrate.run()
 
 app.add_middleware(
     CORSMiddleware,

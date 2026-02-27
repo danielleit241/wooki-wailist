@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.models import User, UserStatus
 from app.schemas import UserCreate
@@ -11,7 +12,7 @@ class UserRepository:
         self.db = db
 
     def list_users(self, page: int, limit: int) -> tuple[list[User], int]:
-        base_query = self.db.query(User)
+        base_query = self.db.query(User).filter(User.is_active.is_(True))
         total_items = base_query.count()
         offset = (page - 1) * limit
         users = (
@@ -60,9 +61,9 @@ class UserRepository:
         self.db.refresh(user)
         return user
 
-    def get_user_by_id(self, user_id: int) -> User | None:
+    def get_user_by_id(self, user_id: UUID) -> User | None:
         return self.db.query(User).filter(User.id == user_id).first()
     
-    def delete_user(self, user_id: int):
-        self.db.query(User).filter(User.id == user_id).update({"is_active": False})
+    def delete_user(self, user_id: UUID):
+        self.db.query(User).filter(User.id == user_id, User.is_active.is_(True)).update({"is_active": False})
         self.db.commit()

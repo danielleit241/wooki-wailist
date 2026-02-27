@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserCreate
@@ -38,7 +39,8 @@ class UserService:
 
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail) from exc
         
-    def delete_user(self, user_id: int):
-        if not self.repository.get_user_by_id(user_id):
+    def delete_user(self, user_id: UUID):
+        user = self.repository.get_user_by_id(user_id)
+        if not user or not user.is_active:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User không tồn tại")
         self.repository.delete_user(user_id)

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
+from uuid import UUID
 
 from app.config import settings
 from app.database import get_db
@@ -32,7 +33,7 @@ def get_users(
     )
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, service: UserService = Depends(get_user_service)):
+def delete_user(user_id: UUID, service: UserService = Depends(get_user_service)):
     service.delete_user(user_id)
     return None
 

@@ -32,7 +32,7 @@ def get_users(
         metadata=None,
     )
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT,  dependencies=[Depends(verify_api_key)])
 def delete_user(user_id: UUID, service: UserService = Depends(get_user_service)):
     service.delete_user(user_id)
     return None

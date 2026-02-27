@@ -59,3 +59,10 @@ class UserRepository:
             raise
         self.db.refresh(user)
         return user
+
+    def get_user_by_id(self, user_id: int) -> User | None:
+        return self.db.query(User).filter(User.id == user_id).first()
+    
+    def delete_user(self, user_id: int):
+        self.db.query(User).filter(User.id == user_id).update({"is_active": False})
+        self.db.commit()

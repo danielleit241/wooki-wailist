@@ -31,6 +31,10 @@ def get_users(
         metadata=None,
     )
 
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: int, service: UserService = Depends(get_user_service)):
+    service.delete_user(user_id)
+    return None
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=UserSingleApiResponse)
 def create_user(payload: UserCreate, service: UserService = Depends(get_user_service)):

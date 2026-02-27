@@ -37,3 +37,8 @@ class UserService:
                 detail = "Dữ liệu bị trùng với bản ghi đã tồn tại"
 
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail) from exc
+        
+    def delete_user(self, user_id: int):
+        if not self.repository.get_user_by_id(user_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User không tồn tại")
+        self.repository.delete_user(user_id)
